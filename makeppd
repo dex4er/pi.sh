@@ -1,0 +1,51 @@
+#!/bin/sh
+
+# PPM packages builder
+#
+# (c) 2006-2007 Piotr Roszatycki <dexter@debian.org>, Artistic
+#
+# $Id$
+
+perl Makefile.PL
+make clean
+perl Makefile.PL
+make
+
+if [ -f Build.PL ]; then
+    VERSION=`grep "^version: " META.yml | sed 's/.*: //'`
+    DISTNAME=`grep "^name: " META.yml | sed 's/.*: //'`
+    DISTVNAME="$DISTNAME-$VERSION"
+else
+    VERSION=`grep "^VERSION = " Makefile | sed 's/.* = //'`
+    DISTNAME=`grep "^DISTNAME = " Makefile | sed 's/.* = //'`
+    DISTVNAME=`grep "^DISTVNAME = " Makefile | sed 's/.* = //'`
+fi
+ARCHCOUNT=`find blib/arch -type f ! -empty | wc -l`
+
+rm -f $DISTVNAME.ppd
+
+make ppd
+
+if [ $ARCHCOUNT = 0 ]; then
+    cat $DISTNAME.ppd \
+        | egrep -v '(OS|ARCHITECTURE) NAME=' \
+        > $DISTNAME.ppd.tmp
+    mv -f $DISTNAME.ppd.tmp $DISTNAME.ppd
+fi
+
+cat $DISTNAME.ppd \
+    | sed -e 's,\(CODEBASE HREF="\).*",\1./'$DISTVNAME'.tgz",' \
+          -e 's,\(SOFTPKG NAME=.* VERSION="\).*",\1'$VERSION'",' \
+    > $DISTVNAME.ppd
+
+rm -f $DISTNAME.ppd
+
+if [ -f Build.PL ]; then
+    rm -f PPM-*.tar.gz
+    mv -f blib/libdoc blib/man3
+    tar zcvf $DISTVNAME.tgz blib
+    # mv -f PPM-*.tar.gz $DISTVNAME.tgz
+    # mv -f .tgz $DISTVNAME.tgz
+else
+    tar zcvf $DISTVNAME.tgz blib
+fi
