@@ -6,6 +6,12 @@
 #
 # $Id$
 
+# Requires:
+#   Shell:
+#     egrep
+#     find (GNU)
+#     tar (GNU)
+
 perl Makefile.PL
 make clean
 perl Makefile.PL
