@@ -1236,6 +1236,14 @@ if [ "$command" = "install" ]; then
             exit 2
         fi
 
+        # Touching *.pmc
+        was_pmc=no
+        grep -h "\.pmc$" "$tmp/newfiles.list" | while read f; do
+            test "$was_pmc" = "no" && sleep 1
+            touch "$f"
+            was_pmc=yes
+        done
+
         # Creating metainformations
         modfile=$fullext.pm
         # Detect version if it is in a,b,c,d format
