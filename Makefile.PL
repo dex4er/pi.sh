@@ -4,7 +4,7 @@ use strict;
 
 WriteMakefile (
     NAME            => 'PIPL',
-    VERSION         => '0.0020070614',
+    VERSION         => '0.0020071008',
     EXE_FILES       => [
         'pi.sh',
         'makeppd',

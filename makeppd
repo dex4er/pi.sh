@@ -12,12 +12,23 @@
 #     find (GNU)
 #     tar (GNU)
 
-perl Makefile.PL
-make clean
-perl Makefile.PL
-make
+if [ -f Build.PL ]; then
+    perl Build.PL
+    ./Build clean
+    perl Build.PL
+    ./Build
+    for cmd in $@; do ./Build $cmd; done
+else 
+    perl Makefile.PL
+    make clean
+    perl Makefile.PL
+    make
+    for cmd in $@; do ./Build $cmd; done
+fi
 
 if [ -f Build.PL ]; then
+    rm -f META.yml
+    ./Build distmeta
     VERSION=`grep "^version: " META.yml | sed 's/.*: //'`
     DISTNAME=`grep "^name: " META.yml | sed 's/.*: //'`
     DISTVNAME="$DISTNAME-$VERSION"
@@ -30,7 +41,11 @@ ARCHCOUNT=`find blib/arch -type f ! -empty | wc -l`
 
 rm -f $DISTVNAME.ppd
 
-make ppd
+if [ -f Build.PL ]; then
+    ./Build ppd
+else
+    make ppd
+fi
 
 if [ $ARCHCOUNT = 0 ]; then
     cat $DISTNAME.ppd \
@@ -48,6 +63,7 @@ rm -f $DISTNAME.ppd
 
 if [ -f Build.PL ]; then
     rm -f PPM-*.tar.gz
+    mv -f blib/bindoc blib/man1
     mv -f blib/libdoc blib/man3
     tar zcvf $DISTVNAME.tgz blib
     # mv -f PPM-*.tar.gz $DISTVNAME.tgz
