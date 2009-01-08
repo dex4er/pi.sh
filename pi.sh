@@ -38,7 +38,7 @@ sub compare_versions {
     $a =~ s/([^0-9\.]+)/.$1./g;
     $a =~ s/\.\././g;
     @a = split /\./, $a;
-    
+
     $b =~ s/^\s+//;
     $b =~ s/\s+$//;
     $b =~ s/[_+]/./g;
@@ -48,13 +48,13 @@ sub compare_versions {
 
     shift @a while ($a[0] eq '');
     shift @b while ($b[0] eq '');
-    
+
     for ($i = 0, $x = ($#a > $#b ? $#a : $#b); $i <= $x; $i++) {
         next if ($a[$i] eq $b[$i]);
         $ia = $a[$i];
         $ib = $b[$i];
         return $ia <=> $ib if ($ia =~ /^\d+$/ && $ib =~ /^\d+$/);
-	return $ia cmp $ib;
+        return $ia cmp $ib;
     }
     return 0;
 }
@@ -126,115 +126,115 @@ sub emit_string {
 my $p = new XML::Parser;
 $p->setHandlers(
     Start => sub {
-	shift;
-	$tag = shift;
-	push @tag, $tag;
-	$data = "";
-	die if ($l == 0 && $tag !~ /^REPOSITORYSUMMARY$/i);
-	if ($l == 1) {
-	    die if ($tag !~ /^SOFTPKG$/i);
-	    ($NAME, $VERSION) = undef;
-	    while ($attr = shift) {
-		$val = shift;
-		if ($attr =~ /^NAME$/i) {
-		    $NAME = $val;
-		}
-		elsif ($attr =~ /^VERSION$/i) {
-		    $VERSION = $val;
-		}
-	    }
-	    $name = $NAME;
-	    %package = ();
-	    $package{version} = $VERSION if defined $VERSION;
-	}
-	elsif ($l == 2 && $tag =~ /^PROVIDE$/i) {
-	    ($NAME, $VERSION) = undef;
-	    while ($attr = shift) {
-		$val = shift;
-		if ($attr =~ /^NAME$/i) {
-		    $NAME = $val;
-		}
-		elsif ($attr =~ /^VERSION$/i) {
-		    $VERSION = $val;
-		}
-	    }
-	    $package{provide}{$NAME} = $VERSION;
-	}
-	elsif ($l == 2 && $tag =~ /^REQUIRE$/i) {
-	    ($NAME, $VERSION) = undef;
-	    while ($attr = shift) {
-		$val = shift;
-		if ($attr =~ /^NAME$/i) {
-		    $NAME = $val;
-		}
-		elsif ($attr =~ /^VERSION$/i) {
-		    $VERSION = $val;
-		}
-	    }
-	    $package{require}{$NAME} = $VERSION;
-	}
-	elsif ($l == 3 && $tag[2] =~ /^IMPLEMENTATION$/i) {
-	    if ($tag =~ /^ARCHITECTURE$/i) {
-		$NAME = undef;
-		while ($attr = shift) {
-		    $val = shift;
-		    if ($attr =~ /^NAME$/i) {
-			$NAME = $val;
-		    }
-		}
-		$package{architecture} = $NAME if defined $NAME;
-	    }
-	    elsif ($tag =~ /^CODEBASE$/i) {
-		$HREF = undef;
-		while ($attr = shift) {
-		    $val = shift;
-		    if ($attr =~ /^HREF$/i) {
-			$HREF = $val;
-		    }
-		}
-		$package{codebase} = $HREF if defined $HREF;
-	    }
-	}
-	$l++;
+        shift;
+        $tag = shift;
+        push @tag, $tag;
+        $data = "";
+        die if ($l == 0 && $tag !~ /^REPOSITORYSUMMARY$/i);
+        if ($l == 1) {
+            die if ($tag !~ /^SOFTPKG$/i);
+            ($NAME, $VERSION) = undef;
+            while ($attr = shift) {
+                $val = shift;
+                if ($attr =~ /^NAME$/i) {
+                    $NAME = $val;
+                }
+                elsif ($attr =~ /^VERSION$/i) {
+                    $VERSION = $val;
+                }
+            }
+            $name = $NAME;
+            %package = ();
+            $package{version} = $VERSION if defined $VERSION;
+        }
+        elsif ($l == 2 && $tag =~ /^PROVIDE$/i) {
+            ($NAME, $VERSION) = undef;
+            while ($attr = shift) {
+                $val = shift;
+                if ($attr =~ /^NAME$/i) {
+                    $NAME = $val;
+                }
+                elsif ($attr =~ /^VERSION$/i) {
+                    $VERSION = $val;
+                }
+            }
+            $package{provide}{$NAME} = $VERSION;
+        }
+        elsif ($l == 2 && $tag =~ /^REQUIRE$/i) {
+            ($NAME, $VERSION) = undef;
+            while ($attr = shift) {
+                $val = shift;
+                if ($attr =~ /^NAME$/i) {
+                    $NAME = $val;
+                }
+                elsif ($attr =~ /^VERSION$/i) {
+                    $VERSION = $val;
+                }
+            }
+            $package{require}{$NAME} = $VERSION;
+        }
+        elsif ($l == 3 && $tag[2] =~ /^IMPLEMENTATION$/i) {
+            if ($tag =~ /^ARCHITECTURE$/i) {
+                $NAME = undef;
+                while ($attr = shift) {
+                    $val = shift;
+                    if ($attr =~ /^NAME$/i) {
+                        $NAME = $val;
+                    }
+                }
+                $package{architecture} = $NAME if defined $NAME;
+            }
+            elsif ($tag =~ /^CODEBASE$/i) {
+                $HREF = undef;
+                while ($attr = shift) {
+                    $val = shift;
+                    if ($attr =~ /^HREF$/i) {
+                        $HREF = $val;
+                    }
+                }
+                $package{codebase} = $HREF if defined $HREF;
+            }
+        }
+        $l++;
     },
     End => sub {
-	shift;
-	if ($l == 2) {
-	    printf "%s:\n", $name;
-	    printf "  abstract: %s\n", emit_string($package{abstract}) if defined $package{abstract};
-	    printf "  architecture: %s\n", emit_string($package{architecture}) if defined $package{architecture};
-	    printf "  author: %s\n", emit_string($package{author}) if defined $package{author};
-	    printf "  codebase: %s\n", emit_string($package{codebase}) if defined $package{codebase};
-	    printf "  version: %s\n", emit_string($package{version}) if defined $package{version};
-	    if (defined $package{require}) {
-		printf "  require:\n";
-		foreach (sort keys %{$package{require}}) {
-		    printf "    %s: %s\n", emit_string($_), emit_string($package{require}{$_});
-		}
-	    }
-	    if (defined $package{provide}) {
-		printf "  provide:\n";
-		foreach (sort keys %{$package{provide}}) {
-		    printf "    %s: %s\n", emit_string($_), emit_string($package{provide}{$_});
-		}
-	    }
-	    ## print Dump { $name => \%package };
-	}
-	elsif ($l == 3) {
-	    if ($tag =~ /^ABSTRACT$/i) {
-		$package{abstract} = $data if $data;
-	    }
-	    elsif ($tag =~ /^AUTHOR$/i) {
-		$package{author} = $data if $data;
-	    }
-	}
-	($tag, $attr, $val) = undef;
-	pop @tag;
-	$l--;
+        shift;
+        if ($l == 2) {
+            printf "%s:\n", $name;
+            printf "  abstract: %s\n", emit_string($package{abstract}) if defined $package{abstract};
+            printf "  architecture: %s\n", emit_string($package{architecture}) if defined $package{architecture};
+            printf "  author: %s\n", emit_string($package{author}) if defined $package{author};
+            printf "  codebase: %s\n", emit_string($package{codebase}) if defined $package{codebase};
+            printf "  version: %s\n", emit_string($package{version}) if defined $package{version};
+            if (defined $package{require}) {
+                printf "  require:\n";
+                foreach (sort keys %{$package{require}}) {
+                    printf "    %s: %s\n", emit_string($_), emit_string($package{require}{$_});
+                }
+            }
+            if (defined $package{provide}) {
+                printf "  provide:\n";
+                foreach (sort keys %{$package{provide}}) {
+                    printf "    %s: %s\n", emit_string($_), emit_string($package{provide}{$_});
+                }
+            }
+            ## print Dump { $name => \%package };
+        }
+        elsif ($l == 3) {
+            if ($tag =~ /^ABSTRACT$/i) {
+                $package{abstract} = $data if $data;
+            }
+            elsif ($tag =~ /^AUTHOR$/i) {
+                $package{author} = $data if $data;
+            }
+        }
+        ($tag, $attr, $val) = undef;
+        pop @tag;
+        $l--;
     },
     Char => sub {
-	shift;
-	$data .= shift;
+        shift;
+        $data .= shift;
     },
 );
 
@@ -723,7 +723,7 @@ if [ "$command" = "repo" ]; then
                 fi
                 printf "%s\n" "$name"
             done
-	exit 0
+        exit 0
     fi
 
     # ppm repo describe <repo>
@@ -743,12 +743,12 @@ if [ "$command" = "repo" ]; then
 
         perl -MYAML -le '
             $c=YAML::LoadFile($ARGV[0]);
-	    $r=$ARGV[1];
-	    printf "Id: %s\n", $r;
-	    printf "Name: %s\n", $c->{repo}->{$r}->{name};
-	    printf "URL: %s\n", $c->{repo}->{$r}->{url};
-	    printf "Enabled: %s\n", $c->{repo}->{$r}->{enabled};
-	    ' "$PERL_PI_DIR/config.yml" "$repo"
+            $r=$ARGV[1];
+            printf "Id: %s\n", $r;
+            printf "Name: %s\n", $c->{repo}->{$r}->{name};
+            printf "URL: %s\n", $c->{repo}->{$r}->{url};
+            printf "Enabled: %s\n", $c->{repo}->{$r}->{enabled};
+            ' "$PERL_PI_DIR/config.yml" "$repo"
         exit 0
     fi
 
@@ -756,9 +756,9 @@ if [ "$command" = "repo" ]; then
     if [ "$subcommand" = "add" ]; then
         url=$1
         shift
-	repo=$1
-	shift
-	name="$*"
+        repo=$1
+        shift
+        name="$*"
 
         if [ -z "$name" ]; then
             echo "Usage: pi.sh repo add <url> <id> <name>"
@@ -770,7 +770,7 @@ if [ "$command" = "repo" ]; then
             exit 1
         fi
 
-	cat << END >> "$PERL_PI_DIR/config.yml"
+        cat << END >> "$PERL_PI_DIR/config.yml"
   $repo:
     name: $name
     url: $url
@@ -795,7 +795,7 @@ END
             exit 1
         fi
 
-	rm -rf "$PERL_PI_DIR/repo/$repo"
+        rm -rf "$PERL_PI_DIR/repo/$repo"
         sed -i "/^  $repo:$/,/    enabled:/d" "$PERL_PI_DIR/config.yml" || exit 1
         echo "ppm repository $repo deleted"
         exit 0
@@ -803,76 +803,76 @@ END
 
     # ppm repo sync [<repo>]
     if [ "$subcommand" = "sync" ]; then
-	repo_opt=$1
-	shift
-	
-	if [ -n "$repo_opt" ]; then
-	    if ! [ -d "$PERL_PI_DIR/repo/$repo_opt" ]; then
-		echo "ppm repo sync: The repository $repo_opt does not exist"
-		exit 1
-	    fi
-	    enabled=`perl -MYAML -le '
-        	$c=YAML::LoadFile($ARGV[0]);
-		$r=$ARGV[1];
-		print $c->{repo}->{$r}->{enabled};
-	    ' "$PERL_PI_DIR/config.yml" "$repo_opt"`
-	    if [ "$enabled" != "yes" ]; then
-		echo "ppm repo sync: The repository $repo_opt is disabled"
-		exit 1
-	    fi
-	    repo_list="$repo_opt"
-	else
-	    repo_list=`perl -MYAML -le '
-        	$c=YAML::LoadFile($ARGV[0]);
-		foreach $r (sort keys %{$c->{repo}}) {
-		    print $r if $c->{repo}->{$r}->{enabled} eq "yes";
-		}
-	    ' "$PERL_PI_DIR/config.yml"`
-	fi
-	
-	if [ -z "$repo_list" ]; then
-	    echo "ppm repo sync: There is no any enabled repository"
-	    exit 1
-	fi
-	
-	for repo in $repo_list; do
-	    url=`perl -MYAML -le '
-        	$c=YAML::LoadFile($ARGV[0]);
-		$r=$ARGV[1];
-		print $c->{repo}->{$r}->{url};
-	    ' "$PERL_PI_DIR/config.yml" "$repo"`
-	    
-	    # download the index
-	    cd "$PERL_PI_DIR/repo/$repo/cache" || exit 1
-	    case "$url" in
-		ftp://*|http://*)
-		    wget -c "$url"
-		    ;;
-		*)
-		    cp -p "$url" .
-	    esac
-	    file=`basename $url`
-	    
-	    # uncompress the downloaded index
-	    case "$file" in
-		*.gz)
-		    file=${file%.gz}
-		    gzip -c -d $file.gz > $file
-		    ;;
-		*.bz2)
-		    file=${file%.bz2}
-		    bzip2 -c -d $file.bz2 > $file
-		    ;;
-	    esac
-	    
-	    # generate the packages.yml index
-	    if grep -qs '<REPOSITORYSUMMARY' "$file"; then
-		# PPM repository index
-		xml2yaml "$file" > "$PERL_PI_DIR/repo/$repo/packages.yml" || exit 1
-	    fi
-	done
-	
-	exit 0
+        repo_opt=$1
+        shift
+
+        if [ -n "$repo_opt" ]; then
+            if ! [ -d "$PERL_PI_DIR/repo/$repo_opt" ]; then
+                echo "ppm repo sync: The repository $repo_opt does not exist"
+                exit 1
+            fi
+            enabled=`perl -MYAML -le '
+                $c=YAML::LoadFile($ARGV[0]);
+                $r=$ARGV[1];
+                print $c->{repo}->{$r}->{enabled};
+            ' "$PERL_PI_DIR/config.yml" "$repo_opt"`
+            if [ "$enabled" != "yes" ]; then
+                echo "ppm repo sync: The repository $repo_opt is disabled"
+                exit 1
+            fi
+            repo_list="$repo_opt"
+        else
+            repo_list=`perl -MYAML -le '
+                $c=YAML::LoadFile($ARGV[0]);
+                foreach $r (sort keys %{$c->{repo}}) {
+                    print $r if $c->{repo}->{$r}->{enabled} eq "yes";
+                }
+            ' "$PERL_PI_DIR/config.yml"`
+        fi
+
+        if [ -z "$repo_list" ]; then
+            echo "ppm repo sync: There is no any enabled repository"
+            exit 1
+        fi
+
+        for repo in $repo_list; do
+            url=`perl -MYAML -le '
+                $c=YAML::LoadFile($ARGV[0]);
+                $r=$ARGV[1];
+                print $c->{repo}->{$r}->{url};
+            ' "$PERL_PI_DIR/config.yml" "$repo"`
+
+            # download the index
+            cd "$PERL_PI_DIR/repo/$repo/cache" || exit 1
+            case "$url" in
+                ftp://*|http://*)
+                    wget -c "$url"
+                    ;;
+                *)
+                    cp -p "$url" .
+            esac
+            file=`basename $url`
+
+            # uncompress the downloaded index
+            case "$file" in
+                *.gz)
+                    file=${file%.gz}
+                    gzip -c -d $file.gz > $file
+                    ;;
+                *.bz2)
+                    file=${file%.bz2}
+                    bzip2 -c -d $file.bz2 > $file
+                    ;;
+            esac
+
+            # generate the packages.yml index
+            if grep -qs '<REPOSITORYSUMMARY' "$file"; then
+                # PPM repository index
+                xml2yaml "$file" > "$PERL_PI_DIR/repo/$repo/packages.yml" || exit 1
+            fi
+        done
+
+        exit 0
     fi
 
     echo "Usage: pi.sh repo list|describe|add|delete|sync"
@@ -1050,41 +1050,41 @@ if [ "$command" = "install" ]; then
             exit 1
         fi
 
-	# Find URL if the package name was given
-	case "$pkg" in
-	    ftp://*|http://*|*.*)
-		:;; # This is not a package name
-	    *)
-		# Find the package
+        # Find URL if the package name was given
+        case "$pkg" in
+            ftp://*|http://*|*.*)
+                :;; # This is not a package name
+            *)
+                # Find the package
                 mkdir "$tmp/download"
                 cd "$tmp/download"
-		version=
-    		for repo in `perl -MYAML -le '
-        	    $c=YAML::LoadFile($ARGV[0]);
-	            foreach (sort keys %{$c->{repo}}) {
-        	        print $_ if $c->{repo}->{$_}->{enabled};
-	            }' "$PERL_PI_DIR/config.yml"`
-		do
-		    sed -n "/^$pkg:/,/^  version:/p" "$PERL_PI_DIR/repo/$repo/packages.yml" \
-			> "$tmp/package-new.yml"
-		    version_new=`grep '^  version:' "$tmp/package-new.yml" | sed 's/.*: //'`
-		    if ! [ -f "$tmp/package.yml" ] || [ `compare_versions "$version_new" "$version"` = 1 ]; then
-			mv -f "$tmp/package-new.yml" "$tmp/package.yml"
-			version=$version_new
-		    fi
-		done
-		if [ -z "$version" ]; then
-		    echo "ppm install: can not find $pkg package"
-		fi
-		url=`perl -MYAML -le '
-        	    $c=YAML::LoadFile($ARGV[0]);
-		    print $c->{repo}->{$ARGV[1]}->{url}' "$PERL_PI_DIR/config.yml" "$repo"`
-		archive=`grep '^  codebase:' "$tmp/package.yml" | sed 's/.*: //'`
-		pkg="$pkg.ppd"
-		yaml2ppd "$tmp/package.yml" > "$pkg"
+                version=
+                for repo in `perl -MYAML -le '
+                    $c=YAML::LoadFile($ARGV[0]);
+                    foreach (sort keys %{$c->{repo}}) {
+                        print $_ if $c->{repo}->{$_}->{enabled};
+                    }' "$PERL_PI_DIR/config.yml"`
+                do
+                    sed -n "/^$pkg:/,/^  version:/p" "$PERL_PI_DIR/repo/$repo/packages.yml" \
+                        > "$tmp/package-new.yml"
+                    version_new=`grep '^  version:' "$tmp/package-new.yml" | sed 's/.*: //'`
+                    if ! [ -f "$tmp/package.yml" ] || [ `compare_versions "$version_new" "$version"` = 1 ]; then
+                        mv -f "$tmp/package-new.yml" "$tmp/package.yml"
+                        version=$version_new
+                    fi
+                done
+                if [ -z "$version" ]; then
+                    echo "ppm install: can not find $pkg package"
+                fi
+                url=`perl -MYAML -le '
+                    $c=YAML::LoadFile($ARGV[0]);
+                    print $c->{repo}->{$ARGV[1]}->{url}' "$PERL_PI_DIR/config.yml" "$repo"`
+                archive=`grep '^  codebase:' "$tmp/package.yml" | sed 's/.*: //'`
+                pkg="$pkg.ppd"
+                yaml2ppd "$tmp/package.yml" > "$pkg"
                 mkdir -p "$(dirname $archive)"
                 wget -O "$archive" "$(dirname $url)/$archive"
-	esac
+        esac
 
         # Download from URL
         case "$pkg" in
@@ -1165,12 +1165,12 @@ if [ "$command" = "install" ]; then
         # TODO: check if /auto/ dir exists
         cd "$tmp/archive"
         if [ -d blib/arch/auto/$pathname ]; then
-    	    packlistdir=blib/arch/auto/$pathname
-    	else
-    	    if ! packlistdir=`dirname $(find blib/arch/auto -depth -name .exists | tail -n 1)`; then
-    	        echo "ppm install: can not find packlistdir"
-    		exit 1
-    	    fi
+            packlistdir=blib/arch/auto/$pathname
+        else
+            if ! packlistdir=`dirname $(find blib/arch/auto -depth -name .exists | tail -n 1)`; then
+                echo "ppm install: can not find packlistdir"
+                exit 1
+            fi
         fi
         packlist="$blib_arch/${packlistdir#blib/arch/}/.packlist"
         fullext=${packlist#$blib_arch/auto/}
@@ -1280,7 +1280,7 @@ if [ "$command" = "install" ]; then
 
         echo "Creating metainformations for package $distname $version"
 
-	mkdir -p "`dirname "$packlist"`"
+        mkdir -p "`dirname "$packlist"`"
         cat "$tmp/newfiles.list" > $packlist
         # TODO: generate PROVIDE tag if is missing
         sed 's/\(<CODEBASE HREF="\)[^"]*\("\)/\1\2/;
@@ -1369,7 +1369,7 @@ if [ "$command" = "remove" ]; then
                 version=`grep ^version "$yml" | sed 's/^.*: //'`
                 echo "Remove the package $pkg $version"
                 awk '{ printf "%s%c", $8, 0 }' "$ls" | xargs -0r rm -f
-		# TODO: remove empty directories
+                # TODO: remove empty directories
                 rm -f "$blib_arch/auto/.pi.pl-area/$pkg".*
 
                 # Done
