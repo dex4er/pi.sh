@@ -2,7 +2,7 @@
 
 # Perl Package Installer - prototype shell implementation
 #
-# (c) 2006-2007 Piotr Roszatycki <dexter@debian.org>, Artistic
+# (c) 2006, 2007, 2008, 2009 Piotr Roszatycki <dexter@debian.org>, Artistic
 #
 # $Id$
 
