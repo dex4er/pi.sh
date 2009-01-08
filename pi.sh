@@ -1132,10 +1132,16 @@ if [ "$command" = "install" ]; then
         fi
 
         ppddir=`dirname $ppd`
-        distname=`grep '<SOFTPKG.* NAME=' $ppd | sed 's/.*NAME="//; s/".*//'`
-        fullext=`echo "$distname" | tr "-" "/"`
+        distname=`grep '<TITLE.*' $ppd | sed 's/.*<TITLE>//; s/<.*//'`
+        name=`echo $distname | sed 's/-/::/g'`
+        pathname=`echo $distname | tr '-' '/'`
         version=`grep '<SOFTPKG.* VERSION=' $ppd | sed 's/.*VERSION="//; s/".*//'`
         archive=`grep '<CODEBASE.* HREF=' "$ppd" | sed 's/.*HREF="//; s/".*//'`
+
+        if ! [ -n "$distname" ]; then
+            echo "ppm install: can not find distname for package $pkg"
+            exit 1
+        fi
 
         if ! [ -s "$ppddir/$archive" ]; then
             echo "ppm install: can not find archive file $archive for package $pkg"
@@ -1158,12 +1164,17 @@ if [ "$command" = "install" ]; then
         # Install new files
         # TODO: check if /auto/ dir exists
         cd "$tmp/archive"
-        packlistdir="blib/arch/auto/$fullext"
+        if [ -d blib/arch/auto/$pathname ]; then
+    	    packlistdir=blib/arch/auto/$pathname
+    	else
+    	    if ! packlistdir=`dirname $(find blib/arch/auto -depth -name .exists | tail -n 1)`; then
+    	        echo "ppm install: can not find packlistdir"
+    		exit 1
+    	    fi
+        fi
         packlist="$blib_arch/${packlistdir#blib/arch/}/.packlist"
         fullext=${packlist#$blib_arch/auto/}
         fullext=${fullext%/.packlist}
-        distname=$(echo $fullext | tr '/' '-')
-        name=$(echo $fullext | sed 's,/,::,g')
         rollback=no
         upgrade=no
         : > "$tmp/newdirs.list" || exit 1
