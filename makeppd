@@ -1,34 +1,33 @@
 #!/bin/sh
+# PPM packages builder                                           
+#                                                                
+# (c) 2006, 2007, 2008, 2009 Piotr Roszatycki <dexter@debian.org>, Artistic   
+                                                                  
+# Requires:                                                      
+#   Shell:                                                       
+#     egrep                                                      
+#     find (GNU)                                                 
+#     tar (GNU)        
 
-# PPM packages builder
-#
-# (c) 2006-2007 Piotr Roszatycki <dexter@debian.org>, Artistic
-#
-# $Id$
-
-# Requires:
-#   Shell:
-#     egrep
-#     find (GNU)
-#     tar (GNU)
+PERL=${PERL:-perl}
 
 if [ -f Build.PL ]; then
-    perl Build.PL
-    ./Build clean
-    perl Build.PL
-    ./Build
-    for cmd in $@; do ./Build $cmd; done
+    $PERL Build.PL
+    $PERL Build clean
+    $PERL Build.PL
+    rm -f META.yml
+    $PERL Build distmeta
+    $PERL Build
+    for cmd in $@; do $PERL Build $cmd; done
 else 
-    perl Makefile.PL
+    $PERL Makefile.PL
     make clean
-    perl Makefile.PL
+    $PERL Makefile.PL
     make
-    for cmd in $@; do ./Build $cmd; done
+    for cmd in $@; do make $cmd; done
 fi
 
 if [ -f Build.PL ]; then
-    rm -f META.yml
-    ./Build distmeta
     VERSION=`grep "^version: " META.yml | sed 's/.*: //'`
     DISTNAME=`grep "^name: " META.yml | sed 's/.*: //'`
     DISTVNAME="$DISTNAME-$VERSION"
@@ -42,7 +41,7 @@ ARCHCOUNT=`find blib/arch -type f ! -empty | wc -l`
 rm -f $DISTVNAME.ppd
 
 if [ -f Build.PL ]; then
-    ./Build ppd
+    $PERL Build ppd
 else
     make ppd
 fi
@@ -65,9 +64,11 @@ if [ -f Build.PL ]; then
     rm -f PPM-*.tar.gz
     mv -f blib/bindoc blib/man1
     mv -f blib/libdoc blib/man3
-    tar zcvf $DISTVNAME.tgz blib
+    tar zcf $DISTVNAME.tgz blib
     # mv -f PPM-*.tar.gz $DISTVNAME.tgz
     # mv -f .tgz $DISTVNAME.tgz
 else
-    tar zcvf $DISTVNAME.tgz blib
+    tar zcf $DISTVNAME.tgz blib
 fi
+
+exit 0
